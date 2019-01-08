@@ -59,29 +59,34 @@ if K.image_data_format() == 'channels_first':
 else:
     input_shape = (img_width, img_height, 3)
 
-model = Sequential()
-model.add(Conv2D(32, (3, 3), input_shape=input_shape))
-model.add(Activation('relu'))
-model.add(MaxPooling2D(pool_size=(2, 2)))
+def create_model():
+    model = Sequential()
+    model.add(Conv2D(32, (3, 3), input_shape=input_shape))
+    model.add(Activation('relu'))
+    model.add(MaxPooling2D(pool_size=(2, 2)))
 
-model.add(Conv2D(32, (3, 3)))
-model.add(Activation('relu'))
-model.add(MaxPooling2D(pool_size=(2, 2)))
+    model.add(Conv2D(32, (3, 3)))
+    model.add(Activation('relu'))
+    model.add(MaxPooling2D(pool_size=(2, 2)))
 
-model.add(Conv2D(64, (3, 3)))
-model.add(Activation('relu'))
-model.add(MaxPooling2D(pool_size=(2, 2)))
+    model.add(Conv2D(64, (3, 3)))
+    model.add(Activation('relu'))
+    model.add(MaxPooling2D(pool_size=(2, 2)))
 
-model.add(Flatten())
-model.add(Dense(64))
-model.add(Activation('relu'))
-model.add(Dropout(0.5))
-model.add(Dense(1))
-model.add(Activation('sigmoid'))
+    model.add(Flatten())
+    model.add(Dense(64))
+    model.add(Activation('relu'))
+    model.add(Dropout(0.5))
+    model.add(Dense(1))
+    model.add(Activation('sigmoid'))
 
-model.compile(loss='binary_crossentropy',
-              optimizer='rmsprop',
-              metrics=['accuracy'])
+    model.compile(loss='binary_crossentropy',
+                  optimizer='rmsprop',
+                  metrics=['accuracy'])
+    return model
+
+# 生产model
+model = create_model()
 
 # this is the augmentation configuration we will use for training
 train_datagen = ImageDataGenerator(
@@ -106,6 +111,8 @@ validation_generator = test_datagen.flow_from_directory(
     batch_size=batch_size,
     class_mode='binary')
 
+
+
 # 训练
 def train():
     model.fit_generator(
@@ -117,6 +124,12 @@ def train():
 
     model.save_weights('first_try.h5')
 
+# 评估模型
+def evaluate():
+    e = model.evaluate_generator(validation_generator, steps = nb_validation_samples // batch_size)
+    print(e)
+    # [0.5820711845159531, 0.7375]
+
 # 预测 准确率75%
 def predict():
     model.load_weights('first_try.h5')
@@ -125,8 +138,12 @@ def predict():
     x = np.expand_dims(x, axis=0)
     preds = model.predict_classes(x)
     print(preds[0][0])
+    evaluate()
 
 predict()
 
 # train()
+
+
+
 
