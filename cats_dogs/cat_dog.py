@@ -137,6 +137,7 @@ def predict():
     x = img_to_array(img)
     x = np.expand_dims(x, axis=0)
     preds = model.predict_classes(x)
+    print(preds)
     print(preds[0][0])
     evaluate()
 
