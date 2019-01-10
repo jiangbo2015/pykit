@@ -1,2 +1,6 @@
-cats_dogs/data/
+# 模型文件
 *.h5
+
+# 数据集
+traffic/data/
+cats_dogs/data/

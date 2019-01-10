@@ -24,19 +24,26 @@ epochs = 2
 # input image dimensions
 img_rows, img_cols = 28, 28
 
-images = []
-for filename in os.listdir('./data/00000/'):
-	print(filename)
-	# img = load_img('data/00000/'+filename, target_size=(28,28))
-	img = Image.open('data/00000/'+filename)
-	# img = img.load()
-	print(np.array(img).shape)
-	x = img_to_array(img)
-	images.append(x)
-img = np.array(images)
-print(img.shape)
+def test_my_imgfold():
+	images = []
+	for filename in os.listdir('./data/00000/'):
+		# 使用load_img加载数据
+		# img = load_img('data/00000/'+filename, target_size=(28,28))
 
-sys.exit()
+		# 使用Image加载并统一大小
+		img = Image.open('data/00000/'+filename)
+		img = img.resize((28, 28))
+
+		x = img_to_array(img)
+		print(x.shape)
+		images.append(x)
+
+	print(np.array(images).shape)
+
+	x = np.array(images, dtype="float") / 255
+	print(x.shape)
+
+
 # the data, split between train and test sets
 (x_train, y_train), (x_test, y_test) = mnist.load_data()
 
