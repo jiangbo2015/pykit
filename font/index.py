@@ -11,7 +11,11 @@ from keras.models import Sequential, load_model
 from keras.layers import Dense, Dropout, Flatten
 from keras.layers import Conv2D, MaxPooling2D
 from keras import backend as K
-import numpy as np 
+import numpy as np
+import sys
+import os
+from PIL import Image
+from keras.preprocessing.image import ImageDataGenerator, load_img, img_to_array
 
 batch_size = 128
 num_classes = 10
@@ -20,8 +24,23 @@ epochs = 2
 # input image dimensions
 img_rows, img_cols = 28, 28
 
+images = []
+for filename in os.listdir('./data/00000/'):
+	print(filename)
+	# img = load_img('data/00000/'+filename, target_size=(28,28))
+	img = Image.open('data/00000/'+filename)
+	# img = img.load()
+	print(np.array(img).shape)
+	x = img_to_array(img)
+	images.append(x)
+img = np.array(images)
+print(img.shape)
+
+sys.exit()
 # the data, split between train and test sets
 (x_train, y_train), (x_test, y_test) = mnist.load_data()
+
+print(x_train.shape)
 
 if K.image_data_format() == 'channels_first':
     x_train = x_train.reshape(x_train.shape[0], 1, img_rows, img_cols)
@@ -39,6 +58,8 @@ x_test /= 255
 print('x_train shape:', x_train.shape)
 print(x_train.shape[0], 'train samples')
 print(x_test.shape[0], 'test samples')
+
+sys.exit()
 
 # convert class vectors to binary class matrices
 y_train = keras.utils.to_categorical(y_train, num_classes)
@@ -68,9 +89,10 @@ def train():
 	          validation_data=(x_test, y_test))
 
 	model.save('model.h5')
-	model.load_weights('model.h5')
+	
 
 def predict():
+	# model.load_weights('model.h5')
 	model = load_model('model.h5')
 	x = x_train[0]
 	x = np.expand_dims(x, axis=0)
