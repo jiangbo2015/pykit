@@ -21,7 +21,7 @@ import sys
 """
 定义的常量
 """
-EPOCHS = 10 # 循环次数
+EPOCHS = 20 # 循环次数
 BATCH_SIZE = 32 #每批处理的数量
 CLASS_NUM = 62 # 分类的数量
 IMG_SIZE = 32 # 图片大小
@@ -55,6 +55,11 @@ def load_data(path):
     return images, labels
 
 
+def gendata_from_file(filepath, batch_size):
+    pass
+
+
+
 """
 创建模型
 """
@@ -68,22 +73,18 @@ def create_model():
     model = Sequential()
 
     # 第一层卷集核数量， 卷积核大小，填充方式，输入
-    model.add(Conv2D(32, kernel_size=(3, 3), input_shape=inputShape))
+    model.add(Conv2D(32, kernel_size=(5, 5), input_shape=inputShape))
     model.add(Activation("relu")) #激活
-    model.add(MaxPooling2D(pool_size=(2, 2), strides=(2, 2))) #池化
+    model.add(MaxPooling2D(pool_size=(2, 2))) #池化，使用MaxPolling
 
-    model.add(Conv2D(64, (3, 3)))
-    model.add(Activation("relu"))
-    model.add(MaxPooling2D(pool_size=(2, 2), strides=(2, 2)))
+    model.add(Conv2D(64, kernel_size=(5, 5), activation="relu"))
+    model.add(MaxPooling2D(pool_size=(2, 2)))
 
     model.add(Flatten())
 
-    model.add(Dense(500)) #全链接层
-    model.add(Activation("relu"))
+    model.add(Dense(500, activation="relu")) #全链接层
 
-   
-    model.add(Dense(CLASS_NUM)) #最后输出CLASS_NUM个
-    model.add(Activation("softmax")) #多分类使用该函数
+    model.add(Dense(CLASS_NUM, activation="softmax")) #最后输出CLASS_NUM个
 
     return model
 
@@ -95,16 +96,18 @@ def train():
     trainX, trainY = load_data('./data/train/')
     testX, testY = load_data('./data/test/')
 
-    train_data = ImageDataGenerator(rotation_range=30, width_shift_range=0.1,
+    datagen = ImageDataGenerator(rotation_range=30, width_shift_range=0.1,
             height_shift_range=0.1, shear_range=0.2, zoom_range=0.2,
             horizontal_flip=True, fill_mode="nearest") 
 
     model = create_model()
 
+    model.summary()
+
     model.compile(loss="categorical_crossentropy", optimizer='rmsprop',
         metrics=["accuracy"])
 
-    history = model.fit_generator(train_data.flow(trainX, trainY, batch_size=BATCH_SIZE),
+    history = model.fit_generator(datagen.flow(trainX, trainY, batch_size=BATCH_SIZE),
         validation_data=(testX, testY), steps_per_epoch=len(trainX) // BATCH_SIZE,
         epochs=EPOCHS, verbose=1)
 
@@ -140,6 +143,18 @@ def predict():
 if __name__=='__main__':
     train()
     # predict()
+
+
+
+# 32, 64, 3,3
+# loss: 0.3643 - acc: 0.8854 - val_loss: 0.2460 - val_acc: 0.9274
+# 
+# 32, 64, 5,5
+# loss: 0.3329 - acc: 0.8952 - val_loss: 0.1920 - val_acc: 0.9488
+# 
+# 0.3537 - acc: 0.8919 - val_loss: 0.2467 - val_acc: 0.9306
+# 
+# loss: 0.2094 - acc: 0.9427 - val_loss: 0.1511 - val_acc: 0.9607
 
 
 
