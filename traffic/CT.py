@@ -21,7 +21,7 @@ import sys
 """
 定义的常量
 """
-EPOCHS = 20 # 循环次数
+EPOCHS = 30 # 循环次数
 BATCH_SIZE = 32 #每批处理的数量
 CLASS_NUM = 62 # 分类的数量
 IMG_SIZE = 32 # 图片大小
@@ -76,6 +76,7 @@ def create_model():
     model.add(Conv2D(32, kernel_size=(5, 5), input_shape=inputShape))
     model.add(Activation("relu")) #激活
     model.add(MaxPooling2D(pool_size=(2, 2))) #池化，使用MaxPolling
+    model.add(Dropout(0.25))
 
     model.add(Conv2D(64, kernel_size=(5, 5), activation="relu"))
     model.add(MaxPooling2D(pool_size=(2, 2)))
@@ -83,6 +84,7 @@ def create_model():
     model.add(Flatten())
 
     model.add(Dense(500, activation="relu")) #全链接层
+    # model.add(Dropout(0.5))
 
     model.add(Dense(CLASS_NUM, activation="softmax")) #最后输出CLASS_NUM个
 
@@ -111,18 +113,22 @@ def train():
         validation_data=(testX, testY), steps_per_epoch=len(trainX) // BATCH_SIZE,
         epochs=EPOCHS, verbose=1)
 
-    model.save('traffic.h5')
+    model.save('traffic_with_dropout.h5')
 
     #画图
     x = np.arange(0, EPOCHS)
     y = history.history['val_loss']
-
     y1 = history.history['val_acc']
+    y2 = history.history['loss']
+    y3 = history.history['acc']
 
     plt.figure()
     plt.plot(x, y, label="val_loss")
     plt.plot(x, y1, label="val_acc")
-    plt.savefig('traffic.png')
+    plt.plot(x, y2, label="loss")
+    plt.plot(x, y3, label="acc")
+    plt.legend()
+    plt.savefig('traffic_with_dropout.png')
     plt.show()
     
 
