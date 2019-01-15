@@ -22,7 +22,7 @@ import sys
 """
 定义的常量
 """
-EPOCHS = 30 # 循环次数
+EPOCHS = 35 # 循环次数
 BATCH_SIZE = 32 #每批处理的数量
 CLASS_NUM = 62 # 分类的数量
 IMG_SIZE = 32 # 图片大小
@@ -56,8 +56,26 @@ def load_data(path):
     return images, labels
 
 
-def gendata_from_file(filepath, batch_size):
-    pass
+def load_data_normal(path):
+    images = []
+    labels = []
+    for folder in os.listdir(path):
+        for file in os.listdir(os.path.join(path, folder)):
+            imgpath = os.path.join(path, folder, file)
+
+            img = cv2.imread(imgpath)
+            img = cv2.resize(img, (IMG_SIZE, IMG_SIZE))
+            img = img_to_array(img)
+
+            images.append(img)
+            labels.append(int(folder))
+
+    images = np.asarray(images, dtype='float') / 255.0
+    labels = np.array(labels)
+
+    labels = to_categorical(labels, num_classes=CLASS_NUM)
+
+    return images, labels
 
 
 
@@ -77,13 +95,14 @@ def create_model():
     model.add(Conv2D(32, kernel_size=(5, 5), input_shape=inputShape))
     model.add(Activation("relu")) #激活
     model.add(MaxPooling2D(pool_size=(2, 2))) #池化，使用MaxPolling
-    model.add(Dropout(0.25))
+    # model.add(Dropout(0.25))
 
     model.add(Conv2D(64, kernel_size=(5, 5), activation="relu"))
     model.add(MaxPooling2D(pool_size=(2, 2)))
+    
 
     model.add(Flatten())
-
+    # model.add(Dropout(0.25))
     model.add(Dense(500, activation="relu")) #全链接层
     # model.add(Dropout(0.5))
 
@@ -96,7 +115,7 @@ def create_model():
 训练模型，先加载数据，使用图像增强来增加数据集数量，
 """
 def train():
-    x, y = load_data('./data/train/')
+    x, y = load_data_normal('./data/train/')
     
     x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.3, random_state=0)
     # x_test, y_test = load_data('./data/test/')
@@ -155,15 +174,7 @@ if __name__=='__main__':
 
 
 
-# 32, 64, 3,3
-# loss: 0.3643 - acc: 0.8854 - val_loss: 0.2460 - val_acc: 0.9274
-# 
-# 32, 64, 5,5
-# loss: 0.3329 - acc: 0.8952 - val_loss: 0.1920 - val_acc: 0.9488
-# 
-# 0.3537 - acc: 0.8919 - val_loss: 0.2467 - val_acc: 0.9306
-# 
-# loss: 0.2094 - acc: 0.9427 - val_loss: 0.1511 - val_acc: 0.9607
+#loss: 0.1605 - acc: 0.9578 - val_loss: 0.1457 - val_acc: 0.9774
 
 
 
