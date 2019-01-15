@@ -6,6 +6,7 @@ from keras.layers.core import Activation, Flatten, Dense, Dropout
 from keras import backend as K
 from keras.preprocessing.image import img_to_array, load_img
 from keras.utils import to_categorical
+from sklearn.model_selection import train_test_split
 
 from imutils import paths
 import matplotlib
@@ -51,7 +52,7 @@ def load_data(path):
     images = np.asarray(images, dtype="float") / 255.0
     labels = np.array(labels)
 
-    labels = to_categorical(labels, num_classes=CLASS_NUM)                         
+    labels = to_categorical(labels, num_classes=CLASS_NUM) # one-hot编码                      
     return images, labels
 
 
@@ -95,8 +96,10 @@ def create_model():
 训练模型，先加载数据，使用图像增强来增加数据集数量，
 """
 def train():
-    trainX, trainY = load_data('./data/train/')
-    testX, testY = load_data('./data/test/')
+    x, y = load_data('./data/train/')
+    
+    x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.3, random_state=0)
+    # x_test, y_test = load_data('./data/test/')
 
     datagen = ImageDataGenerator(rotation_range=30, width_shift_range=0.1,
             height_shift_range=0.1, shear_range=0.2, zoom_range=0.2,
@@ -109,8 +112,8 @@ def train():
     model.compile(loss="categorical_crossentropy", optimizer='rmsprop',
         metrics=["accuracy"])
 
-    history = model.fit_generator(datagen.flow(trainX, trainY, batch_size=BATCH_SIZE),
-        validation_data=(testX, testY), steps_per_epoch=len(trainX) // BATCH_SIZE,
+    history = model.fit_generator(datagen.flow(x_train, y_train, batch_size=BATCH_SIZE),
+        validation_data=(x_test, y_test), steps_per_epoch=len(x_train) // BATCH_SIZE,
         epochs=EPOCHS, verbose=1)
 
     model.save('traffic_with_dropout.h5')
