@@ -7,6 +7,7 @@ from keras import backend as K
 from keras.preprocessing.image import img_to_array, load_img
 from keras.utils import to_categorical
 from sklearn.model_selection import train_test_split
+from keras.callbacks import EarlyStopping
 
 from imutils import paths
 import matplotlib
@@ -22,7 +23,7 @@ import sys
 """
 定义的常量
 """
-EPOCHS = 35 # 循环次数
+EPOCHS = 55 # 循环次数
 BATCH_SIZE = 32 #每批处理的数量
 CLASS_NUM = 62 # 分类的数量
 IMG_SIZE = 32 # 图片大小
@@ -92,19 +93,16 @@ def create_model():
     model = Sequential()
 
     # 第一层卷集核数量， 卷积核大小，填充方式，输入
-    model.add(Conv2D(32, kernel_size=(5, 5), input_shape=inputShape))
+    model.add(Conv2D(32, kernel_size=(3, 3), input_shape=inputShape))
     model.add(Activation("relu")) #激活
     model.add(MaxPooling2D(pool_size=(2, 2))) #池化，使用MaxPolling
-    # model.add(Dropout(0.25))
 
-    model.add(Conv2D(64, kernel_size=(5, 5), activation="relu"))
+    model.add(Conv2D(64, kernel_size=(3, 3), activation="relu"))
     model.add(MaxPooling2D(pool_size=(2, 2)))
     
 
     model.add(Flatten())
-    # model.add(Dropout(0.25))
-    model.add(Dense(500, activation="relu")) #全链接层
-    # model.add(Dropout(0.5))
+    model.add(Dense(512, activation="relu")) #全链接层
 
     model.add(Dense(CLASS_NUM, activation="softmax")) #最后输出CLASS_NUM个
 
@@ -131,9 +129,11 @@ def train():
     model.compile(loss="categorical_crossentropy", optimizer='rmsprop',
         metrics=["accuracy"])
 
+    #连续10次没有达到历史最佳验证精度时，stop
+    early_stopping = EarlyStopping(monitor='val_loss', patience=10)
     history = model.fit_generator(datagen.flow(x_train, y_train, batch_size=BATCH_SIZE),
         validation_data=(x_test, y_test), steps_per_epoch=len(x_train) // BATCH_SIZE,
-        epochs=EPOCHS, verbose=1)
+        epochs=EPOCHS, verbose=1, callbacks=[early_stopping])
 
     model.save('traffic_with_dropout.h5')
 
@@ -174,7 +174,10 @@ if __name__=='__main__':
 
 
 
-#loss: 0.1605 - acc: 0.9578 - val_loss: 0.1457 - val_acc: 0.9774
+# 100/100 [==============================] - 5s 52ms/step - loss: 0.0916 - acc: 0.9719 - val_loss: 0.1338 - val_acc: 0.9789
+# Epoch 55/55
+# 100/100 [==============================] - 5s 52ms/step - loss: 0.1120 - acc: 0.9644 - val_loss: 0.1547 - val_acc: 0.9730
+
 
 
 
