@@ -43,6 +43,8 @@ from keras.layers import Activation, Dropout, Flatten, Dense
 from keras import backend as K
 from keras.preprocessing.image import img_to_array, load_img
 import numpy as np 
+from PIL import Image, ImageDraw, ImageFont
+
 
 # dimensions of our images.
 img_width, img_height = 150, 150
@@ -138,8 +140,20 @@ def predict():
     x = np.expand_dims(x, axis=0)
     preds = model.predict_classes(x)
     print(preds)
-    print(preds[0][0])
-    evaluate()
+    # print(preds[0][0])
+    # evaluate()
+    if preds[0][0] == 1:
+        text = 'dog'
+    else:
+        text = 'cats'
+    draw(text)
+    
+def draw(text):
+    image = Image.open('./data/validation/dogs/dog.11009.jpg')
+    draw = ImageDraw.Draw(image)
+    font = ImageFont.truetype('/Users/jiangbo/Library/Fonts/Arial.ttf', 60)
+    draw.text((80,80), text, font=font)
+    image.show()
 
 predict()
 
