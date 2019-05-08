@@ -44,6 +44,8 @@ from keras import backend as K
 from keras.preprocessing.image import img_to_array, load_img
 import numpy as np 
 from PIL import Image, ImageDraw, ImageFont
+import matplotlib
+import matplotlib.pyplot as plt
 
 
 # dimensions of our images.
@@ -133,29 +135,37 @@ def evaluate():
     # [0.5820711845159531, 0.7375]
 
 # 预测 准确率75%
-def predict():
-    model.load_weights('first_try.h5')
-    img = load_img('./data/validation/dogs/dog.11009.jpg',False,target_size=(img_width,img_height))
-    x = img_to_array(img)
-    x = np.expand_dims(x, axis=0)
-    preds = model.predict_classes(x)
-    print(preds)
-    # print(preds[0][0])
-    # evaluate()
-    if preds[0][0] == 1:
-        text = 'dog'
-    else:
-        text = 'cats'
-    draw(text)
-    
-def draw(text):
-    image = Image.open('./data/validation/dogs/dog.11009.jpg')
-    draw = ImageDraw.Draw(image)
-    font = ImageFont.truetype('/Users/jiangbo/Library/Fonts/Arial.ttf', 60)
-    draw.text((80,80), text, font=font)
-    image.show()
 
-predict()
+def predict_and_show():
+    model.load_weights('first_try.h5')
+    img_array = ['./data/validation/dogs/dog.11005.jpg','./data/validation/dogs/dog.11008.jpg', './data/validation/cats/cat.1009.jpg']
+    img_text = []
+    for i in img_array:
+        img = load_img(i,False,target_size=(img_width,img_height))
+        x = img_to_array(img)
+        x = np.expand_dims(x, axis=0)
+        preds = model.predict_classes(x)
+        print(preds)
+        if preds[0][0] == 1:
+            text = 'dog'
+        else:
+            text = 'cats'
+        img_text.append(text)
+    print(img_text)
+
+    imgs = []
+    for i,x in enumerate(img_array):
+        image = Image.open(x)
+        draw = ImageDraw.Draw(image)
+        font = ImageFont.truetype('/Users/jiangbo/Library/Fonts/Arial.ttf', 60)
+        draw.text((80,80), img_text[i], font=font)
+        imgs.append(image)
+    fig, ax = plt.subplots(1, len(img_text))
+    for i, x in enumerate(img_text):
+        ax[i].imshow(imgs[i])
+    plt.show()
+
+predict_and_show()
 
 # train()
 
