@@ -1,40 +1,4 @@
-'''This script goes along the blog post
-"Building powerful image classification models using very little data"
-from blog.keras.io.
-It uses data that can be downloaded at:
-https://www.kaggle.com/c/dogs-vs-cats/data
-In our setup, we:
-- created a data/ folder
-- created train/ and validation/ subfolders inside data/
-- created cats/ and dogs/ subfolders inside train/ and validation/
-- put the cat pictures index 0-999 in data/train/cats
-- put the cat pictures index 1000-1400 in data/validation/cats
-- put the dogs pictures index 12500-13499 in data/train/dogs
-- put the dog pictures index 13500-13900 in data/validation/dogs
-So that we have 1000 training examples for each class, and 400 validation examples for each class.
-In summary, this is our directory structure:
-```
-data/
-    train/
-        dogs/
-            dog001.jpg
-            dog002.jpg
-            ...
-        cats/
-            cat001.jpg
-            cat002.jpg
-            ...
-    validation/
-        dogs/
-            dog001.jpg
-            dog002.jpg
-            ...
-        cats/
-            cat001.jpg
-            cat002.jpg
-            ...
-```
-'''
+
 
 from keras.preprocessing.image import ImageDataGenerator
 from keras.models import Sequential
@@ -126,48 +90,104 @@ def train():
         validation_data=validation_generator,
         validation_steps=nb_validation_samples // batch_size)
 
-    model.save_weights('first_try.h5')
+    model.save_weights('second_try.h5')
 
 # 评估模型
-def evaluate():
-    e = model.evaluate_generator(validation_generator, steps = nb_validation_samples // batch_size)
-    print(e)
-    # [0.5820711845159531, 0.7375]
+def evaluate_generator():
+    model.load_weights('first_try.h5')
+    steps = validation_generator.n//validation_generator.batch_size
+    e = model.evaluate_generator(
+        validation_generator, 
+        steps=steps # steps可以省略，评估结果一样
+        )
+    print(e) # [0.5820711821317672, 0.7375] 损失/精度
+    
 
-# 预测 准确率75%
+def predict_generator():
+    model.load_weights('first_try.h5')
+    # 使用测试集合
+    test_generator = test_datagen.flow_from_directory(
+        './test/',
+        target_size=(img_width, img_height), 
+        batch_size=batch_size,
+        class_mode='binary',
+        seed=42,
+        shuffle=False)
+    test_generator.reset()
+    steps = test_generator.n//test_generator.batch_size
+    r = model.predict_generator(test_generator, steps = steps)
+    print(r.shape)    # (32, 1)
+    print(test_generator.class_indices) # {'cats': 0, 'dogs': 1}
+    print([x[0] for x in r]) # [0.4,0.3,...,0.9] 预测结果概率值
+
+def predict():
+    model.load_weights('first_try.h5')
+    img = './data/validation/cats/cat.1009.jpg'
+    # img = './data/validation/dogs/dog.11005.jpg'
+    img = load_img(img,False,target_size=(img_width,img_height))
+    x = img_to_array(img)
+    x = x / 255.0
+    x = np.expand_dims(x, axis=0)
+    preds = model.predict(x) #返回概率
+    print(preds) #[[0.48104638]]
+
+def predict_classes():
+    model.load_weights('first_try.h5')
+    img = './data/validation/cats/cat.1009.jpg'
+    img = load_img(img,False,target_size=(img_width,img_height))
+    x = img_to_array(img)
+    x = x / 255.0
+    x = np.expand_dims(x, axis=0)
+    preds = model.predict_classes(x) #返回classes类别
+    print(preds) #[[0]]
 
 def predict_and_show():
     model.load_weights('first_try.h5')
-    img_array = ['./data/validation/dogs/dog.11005.jpg','./data/validation/dogs/dog.11008.jpg', './data/validation/cats/cat.1009.jpg']
+    img_array1 = ['./data/validation/dogs/dog.11005.jpg','./data/validation/dogs/dog.11008.jpg', './data/validation/cats/cat.1009.jpg']
+    img_array = ['./data/validation/cats/cat.1009.jpg']
     img_text = []
     for i in img_array:
         img = load_img(i,False,target_size=(img_width,img_height))
         x = img_to_array(img)
+        x = x/255.0
         x = np.expand_dims(x, axis=0)
-        preds = model.predict_classes(x)
-        print(preds)
-        if preds[0][0] == 1:
-            text = 'dog'
-        else:
-            text = 'cats'
-        img_text.append(text)
-    print(img_text)
+        preds = model.predict(x) #返回概率
+        
+        print(preds.shape)
+        
+        pred = model.predict_classes(x) #返回所属类别
+        print(preds, pred)
+        print(preds.shape)
+    #     print(preds)
+    #     if preds[0][0] == 1:
+    #         text = 'dog'
+    #     else:
+    #         text = 'cats'
+    #     img_text.append(text)
+    # print(img_text)
 
-    imgs = []
-    for i,x in enumerate(img_array):
-        image = Image.open(x)
-        draw = ImageDraw.Draw(image)
-        font = ImageFont.truetype('/Users/jiangbo/Library/Fonts/Arial.ttf', 60)
-        draw.text((80,80), img_text[i], font=font)
-        imgs.append(image)
-    fig, ax = plt.subplots(1, len(img_text))
-    for i, x in enumerate(img_text):
-        ax[i].imshow(imgs[i])
-    plt.show()
+    # imgs = []
+    # for i,x in enumerate(img_array):
+    #     image = Image.open(x)
+    #     draw = ImageDraw.Draw(image)
+    #     font = ImageFont.truetype('/Users/jiangbo/Library/Fonts/Arial.ttf', 60)
+    #     draw.text((80,80), img_text[i], font=font)
+    #     imgs.append(image)
+    # fig, ax = plt.subplots(1, len(img_text))
+    # for i, x in enumerate(img_text):
+    #     ax[i].imshow(imgs[i])
+    # plt.show()
 
-predict_and_show()
+# predict_and_show()
 
 # train()
+
+# evaluate()
+# evaluate_generator()
+
+# predict_generator()
+predict()
+# predict_classes()
 
 
 
